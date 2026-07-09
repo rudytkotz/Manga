@@ -1,6 +1,6 @@
 const STORAGE_KEY = 'comics-library-v1';
-const SUPABASE_URL = window.SUPABASE_URL || '';
-const SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || '';
+let SUPABASE_URL = window.SUPABASE_URL || '';
+let SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || '';
 const form = document.getElementById('comic-form');
 const titleInput = document.getElementById('title');
 const readInput = document.getElementById('read');
@@ -15,6 +15,24 @@ let comics = [];
 let searchTerm = '';
 let activeFilter = 'all';
 let editingComicId = null;
+
+async function ensureSupabaseConfig() {
+  if (SUPABASE_URL && SUPABASE_ANON_KEY) return;
+
+  try {
+    const response = await fetch('config.js');
+    if (!response.ok) return;
+    const text = await response.text();
+
+    const urlMatch = text.match(/window\.SUPABASE_URL\s*=\s*['"]([^'"]+)['"];/);
+    const keyMatch = text.match(/window\.SUPABASE_ANON_KEY\s*=\s*['"]([^'"]+)['"];/);
+
+    if (urlMatch) SUPABASE_URL = urlMatch[1];
+    if (keyMatch) SUPABASE_ANON_KEY = keyMatch[1];
+  } catch (error) {
+    console.warn('Não foi possível carregar config.js:', error);
+  }
+}
 
 function escapeHtml(value) {
   return String(value)
@@ -75,6 +93,23 @@ async function syncComicsToRemote() {
     });
   } catch (error) {
     console.warn('Falha ao sincronizar com o Supabase:', error);
+  }
+}
+
+async function deleteComicRemote(id) {
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) return;
+
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/comics?id=eq.${id}`, {
+      method: 'DELETE',
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        Prefer: 'return=minimal',
+      },
+    });
+  } catch (error) {
+    console.warn('Falha ao deletar do Supabase:', error);
   }
 }
 
@@ -279,7 +314,6 @@ function renderList() {
       const statusClass = getStatusClass(comic.status);
       const statusText = getStatusLabel(comic.status);
       const progressLabel = hasTotal ? `${progress}% concluído` : 'Sem total definido';
-      const chapterLabel = hasTotal ? `${comic.readChapters} / ${comic.totalChapters} capítulos` : `${comic.readChapters} capítulos lidos`;
 
       const titleContent = editingComicId === comic.id
         ? `
@@ -336,7 +370,14 @@ function renderList() {
           </div>
 
           <div class="comic-meta">
-            <span>${chapterLabel}</span>
+            <label class="chapter-note">
+              <span>Lidos</span>
+              <input class="chapter-input" type="number" min="0" data-action="update-read" data-id="${comic.id}" value="${comic.readChapters}" />
+            </label>
+            <label class="chapter-note">
+              <span>Total</span>
+              <input class="chapter-input" type="number" min="1" data-action="update-total" data-id="${comic.id}" value="${comic.totalChapters !== null ? comic.totalChapters : ''}" placeholder="---" />
+            </label>
             <span>${progressLabel}</span>
           </div>
         </article>
@@ -474,10 +515,45 @@ comicList.addEventListener('click', (event) => {
 
   if (action === 'remove') {
     comics = comics.filter((item) => item.id !== id);
+    void deleteComicRemote(id);
   }
 
   saveComics();
   render();
+});
+
+comicList.addEventListener('input', (event) => {
+  const input = event.target.closest('input[data-action]');
+  if (!input) return;
+  const id = input.dataset.id;
+  const action = input.dataset.action;
+  const comic = comics.find((item) => item.id === id);
+  if (!comic) return;
+
+  if (action === 'update-read') {
+    const value = Number.parseInt(input.value, 10);
+    if (Number.isNaN(value)) return;
+    comic.readChapters = Math.max(0, value);
+    if (comic.totalChapters !== null) {
+      comic.readChapters = Math.min(comic.readChapters, comic.totalChapters);
+    }
+    saveComics();
+    render();
+  }
+
+  if (action === 'update-total') {
+    const value = input.value.trim() === '' ? null : Number.parseInt(input.value, 10);
+    if (value === null) {
+      comic.totalChapters = null;
+    } else if (!Number.isNaN(value)) {
+      comic.totalChapters = Math.max(1, value);
+      if (comic.readChapters > comic.totalChapters) {
+        comic.readChapters = comic.totalChapters;
+      }
+    }
+    saveComics();
+    render();
+  }
 });
 
 comicList.addEventListener('keydown', (event) => {
@@ -498,6 +574,7 @@ comicList.addEventListener('keydown', (event) => {
 });
 
 async function initializeApp() {
+  await ensureSupabaseConfig();
   comics = await loadComics();
   render();
 }

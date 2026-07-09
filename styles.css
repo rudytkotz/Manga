@@ -384,6 +384,32 @@ button {
   color: var(--muted);
 }
 
+.chapter-note {
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.84rem;
+  color: var(--muted);
+}
+
+.chapter-note span {
+  font-size: 0.78rem;
+}
+
+.chapter-input {
+  width: 5.7rem;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text);
+  border-radius: 12px;
+  padding: 0.45rem 0.6rem;
+  font: inherit;
+}
+
+.chapter-input:focus {
+  outline: 2px solid rgba(56, 189, 248, 0.35);
+  border-color: var(--accent-2);
+}
+
 .actions {
   display: flex;
   gap: 0.5rem;
