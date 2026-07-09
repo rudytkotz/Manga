@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Meus Comics</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="hero-card">
+        <div class="hero-copy">
+          <p class="eyebrow">Organize sua leitura</p>
+          <h1>Meus Comics</h1>
+          <p class="hero-text">
+            Registre as obras que você está lendo, acompanhe o progresso e encontre
+            rapidamente pelo nome.
+          </p>
+        </div>
+
+        <form id="comic-form" class="comic-form">
+          <h2>Adicionar obra</h2>
+          <label>
+            Nome do comic
+            <input id="title" name="title" type="text" placeholder="Ex.: One Piece" required />
+          </label>
+          <label>
+            Capitulos lidos
+            <input id="read" name="read" type="number" min="0" value="0" required />
+          </label>
+          <label>
+            Total de capítulos (opcional)
+            <input id="total" name="total" type="number" min="1" placeholder="Ex.: 42" />
+          </label>
+          <div id="form-feedback" class="feedback" aria-live="polite"></div>
+          <button type="submit">Adicionar</button>
+        </form>
+      </section>
+
+      <section class="content-card">
+        <div class="toolbar">
+          <div>
+            <p class="section-label">Sua lista</p>
+            <h2>Comics em andamento</h2>
+          </div>
+          <label class="search-box">
+            <span>🔎</span>
+            <input id="search" type="search" placeholder="Buscar por nome" />
+          </label>
+        </div>
+
+        <div class="filter-tabs" role="tablist" aria-label="Filtrar comics">
+          <button class="filter-tab active" data-filter="all" type="button">Todos</button>
+          <button class="filter-tab" data-filter="reading" type="button">Lendo</button>
+          <button class="filter-tab" data-filter="want-to-read" type="button">Quero ler</button>
+          <button class="filter-tab" data-filter="paused" type="button">Pausado</button>
+          <button class="filter-tab" data-filter="completed" type="button">Concluídos</button>
+        </div>
+        <div id="comic-list" class="comic-list"></div>
+      </section>
+    </main>
+
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
