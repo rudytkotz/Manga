@@ -7,9 +7,9 @@ const readInput = document.getElementById('read');
 const totalInput = document.getElementById('total');
 const feedbackContainer = document.getElementById('form-feedback');
 const searchInput = document.getElementById('search');
-const statsContainer = document.getElementById('stats');
 const comicList = document.getElementById('comic-list');
 const filterTabs = document.querySelectorAll('.filter-tab');
+const ongoingTitle = document.getElementById('ongoing-title');
 
 let comics = [];
 let searchTerm = '';
@@ -253,6 +253,13 @@ function renderStats() {
   const wantToRead = comics.filter((comic) => comic.status === 'want-to-read').length;
   const paused = comics.filter((comic) => comic.status === 'paused').length;
   const completed = comics.filter((comic) => comic.status === 'completed').length;
+  const inProgressChapters = comics
+    .filter((comic) => comic.status === 'reading' || comic.status === 'paused')
+    .reduce((sum, comic) => sum + comic.readChapters, 0);
+
+  if (ongoingTitle) {
+    ongoingTitle.innerHTML = `Comics em andamento <span class="section-total">${inProgressChapters} capítulos lidos</span>`;
+  }
 
   filterTabs.forEach((tab) => {
     const filter = tab.dataset.filter;
@@ -522,38 +529,85 @@ comicList.addEventListener('click', (event) => {
   render();
 });
 
-comicList.addEventListener('input', (event) => {
-  const input = event.target.closest('input[data-action]');
-  if (!input) return;
+function applyChapterInputValue(input) {
   const id = input.dataset.id;
   const action = input.dataset.action;
   const comic = comics.find((item) => item.id === id);
   if (!comic) return;
 
   if (action === 'update-read') {
-    const value = Number.parseInt(input.value, 10);
+    const rawValue = input.value.trim();
+    const value = rawValue === '' ? 0 : Number.parseInt(rawValue, 10);
+    if (Number.isNaN(value)) return;
+    comic.readChapters = Math.max(0, value);
+    if (comic.totalChapters !== null) {
+      comic.readChapters = Math.min(comic.readChapters, comic.totalChapters);
+    }
+  }
+
+  if (action === 'update-total') {
+    const rawValue = input.value.trim();
+    if (rawValue === '') {
+      comic.totalChapters = null;
+    } else {
+      const value = Number.parseInt(rawValue, 10);
+      if (Number.isNaN(value)) return;
+      comic.totalChapters = Math.max(1, value);
+      if (comic.readChapters > comic.totalChapters) {
+        comic.readChapters = comic.totalChapters;
+      }
+    }
+  }
+
+  saveComics();
+  render();
+}
+
+comicList.addEventListener('input', (event) => {
+  const input = event.target.closest('input[data-action]');
+  if (!input) return;
+
+  const id = input.dataset.id;
+  const action = input.dataset.action;
+  const comic = comics.find((item) => item.id === id);
+  if (!comic) return;
+
+  if (action === 'update-read') {
+    const rawValue = input.value.trim();
+    if (rawValue === '') return;
+    const value = Number.parseInt(rawValue, 10);
     if (Number.isNaN(value)) return;
     comic.readChapters = Math.max(0, value);
     if (comic.totalChapters !== null) {
       comic.readChapters = Math.min(comic.readChapters, comic.totalChapters);
     }
     saveComics();
-    render();
+    return;
   }
 
   if (action === 'update-total') {
-    const value = input.value.trim() === '' ? null : Number.parseInt(input.value, 10);
-    if (value === null) {
-      comic.totalChapters = null;
-    } else if (!Number.isNaN(value)) {
-      comic.totalChapters = Math.max(1, value);
-      if (comic.readChapters > comic.totalChapters) {
-        comic.readChapters = comic.totalChapters;
-      }
+    const rawValue = input.value.trim();
+    if (rawValue === '') return;
+    const value = Number.parseInt(rawValue, 10);
+    if (Number.isNaN(value)) return;
+    comic.totalChapters = Math.max(1, value);
+    if (comic.readChapters > comic.totalChapters) {
+      comic.readChapters = comic.totalChapters;
     }
     saveComics();
-    render();
   }
+});
+
+comicList.addEventListener('blur', (event) => {
+  const input = event.target.closest('input[data-action]');
+  if (!input) return;
+  applyChapterInputValue(input);
+}, true);
+
+comicList.addEventListener('change', (event) => {
+  const input = event.target.closest('input[data-action]');
+  if (!input) return;
+  applyChapterInputValue(input);
 });
 
 comicList.addEventListener('keydown', (event) => {

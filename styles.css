@@ -257,6 +257,15 @@ button {
   background: rgba(255, 255, 255, 0.08);
 }
 
+.section-total {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0.45rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--accent-2);
+}
+
 .rating-picker {
   display: inline-flex;
   align-items: center;
