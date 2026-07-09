@@ -1,2 +1,2 @@
-window.SUPABASE_URL = '';
-window.SUPABASE_ANON_KEY = '';
+window.SUPABASE_URL = 'https://eyygeoveglxflovgpgfl.supabase.co';
+window.SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5eWdlb3ZlZ2x4ZmxvdmdwZ2ZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2MTcxMjksImV4cCI6MjA5OTE5MzEyOX0.81Jz4vDsORQqacwO-L32eCVTjKweRcckv-jgI64cock';
